@@ -20,23 +20,40 @@ export default function Books() {
   });
 
   const fetchBooks = async () => {
+    setLoading(true);
+    setError('');
     try {
       const params = new URLSearchParams();
       if (searchTitle) params.append('title', searchTitle);
       if (searchAuthor) params.append('author', searchAuthor);
 
-      const response = await fetch(`${API_URL}/api/book?${params}`, {
-        credentials: 'include'
+      const url = `${API_URL}/api/book${params.toString() ? '?' + params.toString() : ''}`;
+      console.log('Fetching books from:', url);
+
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
+
+      console.log('Response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Books fetched:', data);
         setBooks(data);
+        setError('');
       } else {
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
         setError('Failed to fetch books');
+        setBooks([]);
       }
     } catch (err) {
-      setError('Error fetching books');
+      console.error('Fetch error:', err);
+      setError('Error fetching books: ' + err.message);
+      setBooks([]);
     } finally {
       setLoading(false);
     }
